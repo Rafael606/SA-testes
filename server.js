@@ -24,11 +24,23 @@ api.post('/clientes', (req, res) => {
     res.status(201).json(response);
 });
 
+// Atualiza cliente
 api.put('/clientes/update/cpfcnpj/12345678901', (req, res) => {
-
     const response = [
         {
             mensagem: 'Cliente atualizado com sucesso',
+            status: 200
+        }
+    ];
+
+    res.status(200).json(response);
+});
+
+// Deleta cliente
+api.delete('/clientes/delete/cpfcnpj/12345678901', (req, res) => {
+    const response = [
+        {
+            mensagem: 'Cliente deletado com sucesso',
             status: 200
         }
     ];
