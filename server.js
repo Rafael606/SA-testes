@@ -24,6 +24,18 @@ api.post('/clientes', (req, res) => {
     res.status(201).json(response);
 });
 
+api.put('/clientes/update/cpfcnpj/12345678901', (req, res) => {
+
+    const response = [
+        {
+            mensagem: 'Cliente atualizado com sucesso',
+            status: 200
+        }
+    ];
+
+    res.status(200).json(response);
+});
+
 api.listen(porta, () => {
     console.log(`Servidor rodando na porta ${porta}`);
 });
