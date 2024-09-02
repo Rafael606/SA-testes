@@ -1,53 +1,30 @@
 const express = require('express');
-const api = express();
-const porta = 80;
+const app = express();
 
-api.get('/', (req, res) => {
-    const rotaPadrao = {
-        nome_rota: '/',
-        codigo_status: '200',
-        metodo: 'GET'
-    };
+// Middleware de autenticação simulada
+function authenticate(req, res, next) {
+    const authHeader = req.headers.authorization;
 
-    res.status(200).json(rotaPadrao);
+    if (authHeader && authHeader === 'token_valido') {
+        next();
+    } else {
+        res.status(401).json({
+            mensagem: "acesso nao autorizado",
+            cod_status: 401
+        }); 
+    }
+}
+
+// Endpoint protegido pela autenticação
+app.get('/Home', authenticate, (req, res) => {
+    res.status(200).json({
+        mensagem: "acesso autorizado",
+        cod_status: 200
+    });
 });
 
-// Cria clientes
-api.post('/clientes', (req, res) => {
-    const response = [
-        {
-            mensagem: 'Cliente criado com sucesso',
-            status: 201
-        }
-    ];
-
-    res.status(201).json(response);
-});
-
-// Atualiza cliente
-api.put('/clientes/update/cpfcnpj/12345678901', (req, res) => {
-    const response = [
-        {
-            mensagem: 'Cliente atualizado com sucesso',
-            status: 200
-        }
-    ];
-
-    res.status(200).json(response);
-});
-
-// Deleta cliente
-api.delete('/clientes/delete/cpfcnpj/12345678901', (req, res) => {
-    const response = [
-        {
-            mensagem: 'Cliente deletado com sucesso',
-            status: 200
-        }
-    ];
-
-    res.status(200).json(response);
-});
-
-api.listen(porta, () => {
-    console.log(`Servidor rodando na porta ${porta}`);
+// Iniciar o servidor
+const PORT = 80;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
