@@ -1,77 +1,73 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
+const express = require("express");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+
 const app = express();
 const PORT = 80;
 
-app.use(express.json());
-app.use(cookieParser());
+// Middleware para lidar com requisições JSON
+app.use(bodyParser.json());
 
-// Rota POST para criar um cookie
-app.post('/cookie/criar', (req, res) => {
-    const { nome, valor } = req.body;
-    if (!nome || !valor) {
-        return res.status(400).json({
-            mensagem: 'Nome e valor do cookie são necessários',
-            cod_status: 400
-        });
-    }
-    res.cookie(nome, valor);
-    res.status(201).json({
-        mensagem: 'Cookie criado com sucesso',
-        cod_status: 201
-    });
+// Chave secreta para assinar os tokens JWT
+const SECRET_KEY = "minhaChave";
+
+// Simulação de banco de dados de usuários
+const usuarios = [
+  { usuario: "user1", senha: "password1" },
+  { usuario: "user2", senha: "password2" },
+];
+
+// Endpoint para autenticação e geração do JWT
+app.post("/auth/login", (req, res) => {
+  const { usuario, senha } = req.body;
+
+  // Verificar se o usuário existe
+  const user = usuarios.find((u) => u.usuario === usuario && u.senha === senha);
+
+  if (user) {
+    // Gerar o token JWT
+    const token = jwt.sign({ usuario }, SECRET_KEY, { expiresIn: "1h" });
+
+    // Retornar o token no corpo da resposta
+    res.json({ token });
+  } else {
+    // Usuário não encontrado ou senha incorreta
+    res.status(401).json({ mensagem: "Usuário ou senha incorretos" });
+  }
 });
 
-// Rota GET para ler um cookie
-app.get('/cookie/ler', (req, res) => {
-    const cookies = req.cookies;
-    if (Object.keys(cookies).length === 0) {
-        return res.status(404).json({
-            mensagem: 'Nenhum cookie encontrado',
-            cod_status: 404
-        });
-    }
-    const cookieName = Object.keys(cookies)[0];
-    const cookieValue = cookies[cookieName];
-    res.status(200).json({
-        mensagem: `O nome do cookie criado foi ${cookieName} e valor ${cookieValue}`,
-        cod_status: 200
+// Middleware para verificar o token JWT
+const verificarToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+
+  if (token) {
+    // Verificar o token
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ mensagem: "Token inválido" });
+      } else {
+        // Se o token for válido, prosseguir para o próximo middleware
+        req.usuario = decoded.usuario;
+        next();
+      }
     });
+  } else {
+    return res.status(403).json({ mensagem: "Token não fornecido" });
+  }
+};
+
+// Simulação de lista de produtos
+const produtos = [
+  { id: 1, nome: "escova de dente", preco: "10.00" },
+  { id: 2, nome: "shampoo", preco: "40.00" },
+];
+
+// Endpoint protegido para listar produtos
+app.get("/produtos", verificarToken, (req, res) => {
+  res.json({ produtos });
 });
 
-// Rota PUT para atualizar um cookie
-app.put('/cookie/atualizar', (req, res) => {
-    const { nome, novoValor } = req.body;
-    if (!nome || !novoValor) {
-        return res.status(400).json({
-            mensagem: 'Nome e novo valor do cookie são necessários',
-            cod_status: 400
-        });
-    }
-    res.cookie(nome, novoValor);
-    res.status(201).json({
-        mensagem: `O novo valor do cookie é ${novoValor}`,
-        cod_status: 201
-    });
-});
-
-// Rota DELETE para excluir um cookie
-app.delete('/cookie/excluir', (req, res) => {
-    const { nome } = req.body;
-    if (!nome) {
-        return res.status(400).json({
-            mensagem: 'Nome do cookie é necessário',
-            cod_status: 400
-        });
-    }
-    res.clearCookie(nome);
-    res.status(201).json({
-        mensagem: 'Cookie excluído com sucesso',
-        cod_status: 201
-    });
-});
-
-// Inicia o servidor
+// Iniciar o servidor
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
